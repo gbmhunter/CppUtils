@@ -1,0 +1,8 @@
+# CLion build directory
+cmake-build-debug/
+
+# Manual build directory
+build/
+
+# High-churn CLion project file
+.idea/workspace.xml
