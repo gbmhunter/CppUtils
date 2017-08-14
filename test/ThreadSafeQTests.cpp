@@ -1,10 +1,10 @@
 ///
-/// \file 				ThreadSafeQueueTests.cpp
+/// \file 				ThreadSafeQTests.cpp
 /// \author 			Geoffrey Hunter (www.mbedded.ninja) <gbmhunter@gmail.com>
 /// \edited             n/a
 /// \created			2017-08-11
-/// \last-modified		2017-08-11
-/// \brief 				Contains tests for the ThreadSafeQueue class.
+/// \last-modified		2017-08-14
+/// \brief 				Contains tests for the ThreadSafeQ class.
 /// \details
 ///		See README.md in root dir for more info.
 
@@ -16,20 +16,20 @@
 #include "gtest/gtest.h"
 
 // User includes
-#include "CppUtils/ThreadSafeQueue.hpp"
+#include "CppUtils/ThreadSafeQ.hpp"
 
 using namespace mn::CppUtils;
 
 namespace {
 
-    class ThreadSafeQueueTests : public ::testing::Test {
+    class ThreadSafeQTests : public ::testing::Test {
     protected:
-        ThreadSafeQueueTests() {}
-        virtual ~ThreadSafeQueueTests() {}
+        ThreadSafeQTests() {}
+        virtual ~ThreadSafeQTests() {}
     };
 
-    TEST_F(ThreadSafeQueueTests, SingleThreadPushPop) {
-        ThreadSafeQueue<std::string> threadSafeQueue;
+    TEST_F(ThreadSafeQTests, SingleThreadPushPop) {
+        ThreadSafeQ<std::string> threadSafeQueue;
         threadSafeQueue.Push("hello");
         EXPECT_EQ(1, threadSafeQueue.Size());
         std::string output;
@@ -38,8 +38,8 @@ namespace {
         EXPECT_EQ("hello", output);
     }
 
-    TEST_F(ThreadSafeQueueTests, SingleThreadDoublePushPop) {
-        ThreadSafeQueue<std::string> threadSafeQueue;
+    TEST_F(ThreadSafeQTests, SingleThreadDoublePushPop) {
+        ThreadSafeQ<std::string> threadSafeQueue;
         threadSafeQueue.Push("hello");
         threadSafeQueue.Push("world");
         std::string output;
@@ -54,12 +54,12 @@ namespace {
         EXPECT_EQ("world", output);
     }
 
-    TEST_F(ThreadSafeQueueTests, MultiThread) {
+    TEST_F(ThreadSafeQTests, MultiThread) {
 
         static constexpr uint8_t NUM_THREADS = 10;
         static constexpr uint32_t NUM_ITEMS_PER_THREAD = 100;
 
-        ThreadSafeQueue<uint8_t> threadSafeQueue;
+        ThreadSafeQ<uint8_t> threadSafeQueue;
 
         std::vector<std::thread> threads;
         for(int i = 0; i < NUM_THREADS; i++) {
