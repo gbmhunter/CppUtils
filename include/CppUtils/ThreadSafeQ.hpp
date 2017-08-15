@@ -40,9 +40,9 @@ namespace mn {
                 conditionVariable_.notify_one();
             }
 
-            /// \brief      Removes one item from the front of the thread-safe queue.
+            /// \brief      Waits indefinitely until an item is available on the queue. Removes one item.
             /// \details    This may be called from multiple threads at the "same time". Method
-            ///             will block until the is an item on the queue.
+            ///             will block indefinitely (no timeout) until there is an item on the queue.
             void Pop(T& item) {
 
                 // Lock the mutex
