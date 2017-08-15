@@ -47,6 +47,55 @@ Contains static bit manipulation methods. This includes methods for generating a
     result = Bits::SetBits(0b11111111, 0b11011, 0, 5));
     // result = 0b11111011 or 0xFB
 
+Event.hpp
+=========
+
+Contains a basic event class which you can use to implement an event/listener based design.
+
+**Basic Example**
+
+.. code:: cpp
+
+    Event<void()> event;
+
+    event.AddListener([&](){
+        std::cout << "Listener called!" << std::endl;
+    });
+
+    event.Fire(); // Prints "Listener called!"
+
+**One Input Parameter**
+
+.. code:: cpp
+
+    Event<void(std::string)> event;
+
+    event.AddListener([&](std::string msg){
+        std::cout << msg << std::endl;
+    });
+
+    event.Fire("Hello"); // Prints "Hello"
+
+**Bind To Method**
+
+.. code:: cpp
+
+    class TestClass {
+        void TestMethod() {
+            std::cout << "TestMethod() called." << std::endl;
+        }
+    }
+
+    int main() {
+        TestClass testClass;
+
+        Event<void(std::string)> event;
+
+        event.AddListener(std::bind(&TestClass::TestMethod, &testClass));
+
+        event.Fire(); // Prints "TestMethod() called"
+    }
+
 
 String.hpp
 ==========
