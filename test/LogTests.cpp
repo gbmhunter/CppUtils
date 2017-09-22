@@ -3,7 +3,7 @@
 /// \author 			Geoffrey Hunter (www.mbedded.ninja) <gbmhunter@gmail.com>
 /// \edited             n/a
 /// \created			2017-07-26
-/// \last-modified		2017-08-10
+/// \last-modified		2017-09-22
 /// \brief 				Contains tests for the logging macros.
 /// \details
 ///		See README.md in root dir for more info.
@@ -31,7 +31,12 @@ namespace {
 
     };
 
-    TEST_F(LogTests, BasicTest) {
+    TEST_F(LogTests, BasicStringTest) {
+        // This uses no var args
+        LOG_INFO(COLOR, "Hello!\r\n");
+    }
+
+    TEST_F(LogTests, StringAsVarArg) {
 
         // It's hard to capture printf() output, let's just make
         // sure syntax compiles o.k.!
