@@ -18,6 +18,8 @@
 namespace mn {
     namespace CppUtils {
 
+        /// \details    This class is neither movable nor copyable. Use a smart pointer if you need copy/move like
+        ///             capabilities.
         class Semaphore {
         public:
 

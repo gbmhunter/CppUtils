@@ -3,7 +3,7 @@
 /// \author 			Geoffrey Hunter (www.mbedded.ninja) <gbmhunter@gmail.com>
 /// \edited             n/a
 /// \created			2017-08-15
-/// \last-modified		2017-08-15
+/// \last-modified		2017-09-22
 /// \brief 				Contains Logging macros.
 /// \details
 ///		See README.md in root dir for more info.
@@ -19,7 +19,7 @@ namespace mn {
 
 #define LOG_INFO(color, fmt, ...) \
         do { fprintf(stdout, "%s%s:%d:%s(): " fmt, color,  __FILE__, \
-                                __LINE__, __func__, __VA_ARGS__); \
+                                __LINE__, __func__, ##__VA_ARGS__); \
             fprintf(stdout, "\x1b[0m"); \
         } while (0)
 
