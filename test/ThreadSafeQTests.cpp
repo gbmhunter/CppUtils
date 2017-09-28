@@ -62,16 +62,16 @@ namespace {
         ThreadSafeQ<uint8_t> threadSafeQueue;
 
         std::vector<std::thread> threads;
-        for(int i = 0; i < NUM_THREADS; i++) {
+        for(uint8_t i = 0; i < NUM_THREADS; i++) {
             threads.push_back(std::thread([i, &threadSafeQueue]() {
-               for(int j = 0; j < NUM_ITEMS_PER_THREAD; j++) {
+               for(uint8_t j = 0; j < NUM_ITEMS_PER_THREAD; j++) {
                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
                    threadSafeQueue.Push(i);
                }
             }));
         }
 
-        std::array<uint8_t, NUM_THREADS> counts;
+        std::array<uint8_t, NUM_THREADS> counts{};
 
         uint8_t output;
 
