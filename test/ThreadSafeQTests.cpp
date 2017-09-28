@@ -71,7 +71,7 @@ namespace {
             }));
         }
 
-        std::array<uint8_t, NUM_THREADS> counts;
+        std::array<uint8_t, NUM_THREADS> counts{};
 
         uint8_t output;
 
