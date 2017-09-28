@@ -100,14 +100,14 @@ Contains a basic event class which you can use to implement an event/listener ba
 String.hpp
 ==========
 
-**FromHex()**
+**ToHex()**
 
 .. code:: cpp
 
-    std::cout << String::FromHex(15, 2);
+    std::cout << String::ToHex(15, 2);
     // Prints "0xFF"
 
-    std::cout << String::FromHex(4, 3);
+    std::cout << String::ToHex(4, 3);
     // Prints "0x004"
 
 
