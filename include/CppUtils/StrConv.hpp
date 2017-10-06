@@ -1,15 +1,15 @@
 ///
-/// \file 				String.hpp
+/// \file 				StrConv.hpp
 /// \author 			Geoffrey Hunter (www.mbedded.ninja) <gbmhunter@gmail.com>
 /// \edited             n/a
 /// \created			2017-08-11
-/// \last-modified		2017-09-28
-/// \brief 				Contains the String class.
+/// \last-modified		2017-10-06
+/// \brief 				Contains the StrConv class.
 /// \details
 ///		See README.md in root dir for more info.
 
-#ifndef MN_CPP_UTILS_STRING_H_
-#define MN_CPP_UTILS_STRING_H_
+#ifndef MN_CPP_UTILS_STR_CONV_H_
+#define MN_CPP_UTILS_STR_CONV_H_
 
 // System includes
 #include <cstdint>
@@ -19,8 +19,8 @@
 namespace mn {
     namespace CppUtils {
 
-        /// \brief      Contains static methods for converting various objects to strings.
-        class String {
+        /// \brief      Contains static methods for converting various objects to different string representations.
+        class StrConv {
 
         public:
 
@@ -75,4 +75,4 @@ namespace mn {
 } // namespace mn
 
 
-#endif // #ifndef MN_CPP_UTILS_STRING_H_
+#endif // #ifndef MN_CPP_UTILS_STR_CONV_H_

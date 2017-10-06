@@ -97,18 +97,30 @@ Contains a basic event class which you can use to implement an event/listener ba
     }
 
 
-String.hpp
-==========
+StrConv.hpp
+===========
+
+A header-only collection of "to string" conversion methods which convert various objects (incl discrete values and iterable types) to various string representations.
 
 **ToHex()**
 
 .. code:: cpp
 
-    std::cout << String::ToHex(15, 2);
+    std::cout << StrConv::ToHex(15, 2) << std::endl;
     // Prints "0xFF"
 
-    std::cout << String::ToHex(4, 3);
+    std::cout << StrConv::ToHex(4, 3) << std::endl;
     // Prints "0x004"
+
+    std::cout << StrConv::ToHex(std::vector({ 0x0A, 0x0B }) << std::endl;
+    // Prints "{ 0x0A, 0x0B }"
+
+**ToAscii()**
+
+.. code:: cpp
+
+    std::cout << StrConv::ToAscii(std::vector({ 'a', 'b' }) << std::endl;
+    // Prints "{ 'a', 'b' }"
 
 
 ThreadSafeQ.hpp
