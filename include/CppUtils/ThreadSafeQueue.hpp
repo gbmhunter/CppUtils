@@ -1,15 +1,15 @@
 ///
-/// \file 				ThreadSafeQ.hpp
+/// \file 				ThreadSafeQueue.hpp
 /// \author 			Geoffrey Hunter (www.mbedded.ninja) <gbmhunter@gmail.com>
 /// \edited             n/a
 /// \created			2017-08-09
-/// \last-modified		2017-08-14
-/// \brief 				Contains the ThreadSafeQ class.
+/// \last-modified		2017-10-06
+/// \brief 				Contains the ThreadSafeQueue class.
 /// \details
 ///		See README.md in root dir for more info.
 
-#ifndef MN_CPP_UTILS_THREAD_SAFE_Q_H_
-#define MN_CPP_UTILS_THREAD_SAFE_Q_H_
+#ifndef MN_CPP_UTILS_THREAD_SAFE_QUEUE_H_
+#define MN_CPP_UTILS_THREAD_SAFE_QUEUE_H_
 
 // System includes
 #include <queue>
@@ -21,7 +21,7 @@ namespace mn {
 
         /// \brief       A thread-safe queue designed for inter-thread communication.
         template<typename T>
-        class ThreadSafeQ {
+        class ThreadSafeQueue {
         public:
 
             /// \brief      Adds something to the back of the thread-safe queue.
@@ -98,4 +98,4 @@ namespace mn {
     } // namespace CppUtils
 } // namespace mn
 
-#endif // #ifndef MN_CPP_UTILS_THREAD_SAFE_Q_H_
+#endif // #ifndef MN_CPP_UTILS_THREAD_SAFE_QUEUE_H_

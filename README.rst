@@ -123,8 +123,8 @@ A header-only collection of "to string" conversion methods which convert various
     // Prints "{ 'a', 'b' }"
 
 
-ThreadSafeQ.hpp
-===============
+ThreadSafeQueue.hpp
+===================
 
 Contains a cross-platform thread safe queue object which uses the C++14 standard only (no UNIX :code:`pthread` or Windows :code:`CreateThread`).
 
