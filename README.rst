@@ -127,3 +127,26 @@ ThreadSafeQ.hpp
 ===============
 
 Contains a cross-platform thread safe queue object which uses the C++14 standard only (no UNIX :code:`pthread` or Windows :code:`CreateThread`).
+
+Timer.hpp
+=========
+
+A timer which allows you to run code after a timeout occurs (code will be run within a new timer thread).
+
+.. code:: cpp
+
+    #include <atomic>
+    #include "CppUtils/Timer.hpp"
+    using namespace std::literals;
+
+    std::atomic<bool> callbackCalled(false);
+    Timer timer(100ms, [&]{
+        // This will be called in the context of a timer thread, be aware
+        // of concurrency concerns!
+        callbackCalled.store(true);
+    });
+
+    std::this_thread::sleep_for(200ms);
+
+    std::cout << "callbackCalled = " << callbackCalled.load() << std::endl;
+    // Prints "true"
