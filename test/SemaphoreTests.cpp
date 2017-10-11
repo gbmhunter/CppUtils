@@ -3,7 +3,7 @@
 /// \author 			Geoffrey Hunter (www.mbedded.ninja) <gbmhunter@gmail.com>
 /// \edited             n/a
 /// \created			2017-09-22
-/// \last-modified		2017-09-22
+/// \last-modified		2017-10-11
 /// \brief 				Contains tests for the Semaphore class.
 /// \details
 ///		See README.md in root dir for more info.
@@ -18,6 +18,7 @@
 // User includes
 #include "CppUtils/Semaphore.hpp"
 
+using namespace std::literals;
 using namespace mn::CppUtils;
 
 namespace {
@@ -57,6 +58,28 @@ namespace {
         Semaphore semaphore;
         bool wasNotify = semaphore.TryWait(std::chrono::milliseconds(100));
         EXPECT_FALSE(wasNotify);
+    }
+
+    TEST_F(SemaphoreTests, TryWaitThreeNotifications) {
+        Semaphore semaphore;
+
+        std::thread t1([&]() {
+            semaphore.Notify();
+            semaphore.Notify();
+            semaphore.Notify();
+        });
+
+        EXPECT_TRUE(semaphore.TryWait(100ms));
+        EXPECT_TRUE(semaphore.TryWait(100ms));
+        EXPECT_TRUE(semaphore.TryWait(100ms));
+
+        auto start = std::chrono::high_resolution_clock::now();
+        EXPECT_FALSE(semaphore.TryWait(100ms));
+        auto finish = std::chrono::high_resolution_clock::now();
+        auto duration = finish - start;
+        EXPECT_NEAR(100, std::chrono::duration_cast<std::chrono::milliseconds>(duration).count(), 10);
+
+        t1.join();
     }
 
 }  // namespace

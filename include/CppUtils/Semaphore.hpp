@@ -39,7 +39,6 @@ namespace mn {
                 while(count_ == 0) {
                     cv_.wait(lock);
                 }
-
                 count_--;
             }
 
@@ -52,7 +51,7 @@ namespace mn {
                 })) {
                     return false;
                 }
-
+                count_--;
                 return true;
             }
 
