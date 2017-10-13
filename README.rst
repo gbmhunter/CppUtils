@@ -101,9 +101,10 @@ HeapTracker.hpp
 
 HeapTracker.hpp contains a :code:`HeapTracker` class which can be used keep track of memory allocations and deallocations (via :code:`new`, :code:`new[]`, :code:`delete`, and :code:`delete[]`) to the heap.
 
-Usage:
+**Usage:**
 
 .. code:: cpp
+
     #include "CppUtils/HeapTracker.hpp"
 
     // IMPORTANT! Only use these macros in one .cpp file. These macros define functions for new and delete
