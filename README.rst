@@ -126,6 +126,8 @@ HeapTracker.hpp contains a :code:`HeapTracker` class which can be used keep trac
 
         std::cout << "Heap size (B) = " << HeapTracker::Instance().GetHeapSize_B() >> std::endl;
         // Prints "x" again
+
+        return 0;
     }
 
 **Points To Note:**
@@ -135,6 +137,7 @@ HeapTracker.hpp contains a :code:`HeapTracker` class which can be used keep trac
 - As mentioned above, the macros :code:`HEAP_TRACKER_NEW` and :code:`HEAP_TRACKER_DELETE` should be included in only one source file. However, :code:`#include CppUtils/HeapTracker.hpp` can be included in as many files as you want.
 - Using :code:`HeapTracker` imposes a **small** performance penalty as extra code is run on every call to :code:`new` or :code:`delete`. For every :code:`new`, a :code:`std::mutex` is locked, a map entry is created and the byte count incremented. On every :code:`delete`, a :code:`std::mutex` is locked, a map key/value pair is looked up and removed, and the byte count decremented.
 - :code:`HeapTracker` is not able to keep track of heap allocations that do not use the standard :code:`new`/:code:`delete`. This includes any use of :code:`malloc()`/:code:`free()` and custom allocators.
+- :code:`HeapTracker` is a thread-safe Singleton. Use :code:`HeapTracker::Instance()` to acquire a reference to the single instance.
 
 StrConv.hpp
 ===========
