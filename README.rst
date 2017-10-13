@@ -96,6 +96,44 @@ Contains a basic event class which you can use to implement an event/listener ba
         event.Fire(); // Prints "TestMethod() called"
     }
 
+HeapTracker.hpp
+===============
+
+HeapTracker.hpp contains a :cpp:`HeapTracker` class which can be used keep track of memory allocations and deallocations (via :cpp:`new`, :cpp:`new[]`, :cpp:`delete`, and :cpp:`delete[]`) to the heap.
+
+Usage:
+
+.. code:: cpp
+    #include "CppUtils/HeapTracker.hpp"
+
+    // IMPORTANT! Only use these macros in one .cpp file. These macros define functions for new and delete
+    // which override the default ones provided by the compiler. These new functions define some additional
+    // code to keep track of new/delete calls.
+    HEAP_TRACKER_NEW;
+    HEAP_TRACKER_DELETE;
+
+    int main() {
+        std::cout << "Heap size (B) = " << HeapTracker::Instance().GetHeapSize_B() >> std::endl;
+        // Prints some value "x"
+
+        uint8_t* tempBuffer = new uint8_t[100];
+
+        std::cout << "Heap size (B) = " << HeapTracker::Instance().GetHeapSize_B() >> std::endl;
+        // Prints "x + 100"
+
+        delete[] tempBuffer;
+
+        std::cout << "Heap size (B) = " << HeapTracker::Instance().GetHeapSize_B() >> std::endl;
+        // Prints "x" again
+    }
+
+**Points To Note:**
+
+- :cpp:`HeapTracker` is thread safe. :cpp:`HeapTracker::Instance().GetHeapSize_B()` can be called from multiple threads. The additions to the overriden new and delete functions are also thread safe.
+- :cpp:`HeapTracker` does not report the **exact** number of bytes used by the heap. This is becausethe compiler adds additional meta-data to a heap allocation so that :cpp:`delete` knows exactly how to delete the provided memory pointer (e.g. how many array elements to delete if :cpp:`delete[]` is called). Typically this is done by inserting a byte before the returned pointer which holds this meta-data, although this is implementation specific. Also, :cpp:`HeapTracker` creates a map on the heap to store needed pointer/size data which is not counted by :cpp:`GetHeapSize_B()` (a custom allocator is used to prevent infinite recursion). Thus the number returned by :code:`GetHeapSize_B()` will always be slightly less than the true heap usage, although should still be relatively accurate.
+- As mentioned above, the macros :cpp:`HEAP_TRACKER_NEW` and :cpp:`HEAP_TRACKER_DELETE` should be included in only one source file. However, :cpp:`#include CppUtils/HeapTracker.hpp` can be included in as many files as you want.
+- Using :cpp:`HeapTracker` imposes a **small** performance penalty as extra code is run on every call to :cpp:`new` or :cpp:`delete`. For every :cpp:`new`, a :cpp:`std::mutex` is locked, a map entry is created and the byte count incremented. On every :cpp:`delete`, a :cpp:`std::mutex` is locked, a map key/value pair is looked up and removed, and the byte count decremented.
+- :cpp:`HeapTracker` is not able to keep track of heap allocations that do not use the standard :cpp:`new`/:cpp:`delete`. This includes any use of :cpp:`malloc()`/:cpp:`free()` and custom allocators.
 
 StrConv.hpp
 ===========
