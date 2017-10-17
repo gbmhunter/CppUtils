@@ -36,7 +36,7 @@ namespace {
         TimerWheel timerWheel;
 
         std::atomic<bool> timerExpiryCalled(false);
-        timerWheel.AddTimer(500ms, [&]() {
+        timerWheel.AddTimer(WTimerType::SingleShot, 500ms, [&]() {
             timerExpiryCalled.store(true);
         });
 
@@ -50,10 +50,10 @@ namespace {
 
         std::atomic<int> counter(0);
 
-        timerWheel.AddTimer(100ms, [&]() {
+        timerWheel.AddTimer(WTimerType::SingleShot, 100ms, [&]() {
             counter.fetch_add(1);
         });
-        timerWheel.AddTimer(500ms, [&]() {
+        timerWheel.AddTimer(WTimerType::SingleShot, 500ms, [&]() {
             counter.fetch_add(1);
         });
 
@@ -66,13 +66,13 @@ namespace {
 
         std::atomic<int> counter(0);
 
-        timerWheel.AddTimer(100ms, [&]() {
+        timerWheel.AddTimer(WTimerType::SingleShot, 100ms, [&]() {
             counter.fetch_add(1);
         });
-        timerWheel.AddTimer(500ms, [&]() {
+        timerWheel.AddTimer(WTimerType::SingleShot, 500ms, [&]() {
             counter.fetch_add(1);
         });
-        timerWheel.AddTimer(50ms, [&]() {
+        timerWheel.AddTimer(WTimerType::SingleShot, 50ms, [&]() {
             counter.fetch_add(1);
         });
 
@@ -86,13 +86,13 @@ namespace {
 
         std::atomic<int> counter(0);
 
-        auto timer0 = timerWheel.AddTimer(100ms, [&]() {
+        auto timer0 = timerWheel.AddTimer(WTimerType::SingleShot, 100ms, [&]() {
             counter.fetch_add(1);
         });
-        auto timer1 = timerWheel.AddTimer(2000ms, [&]() {
+        auto timer1 = timerWheel.AddTimer(WTimerType::SingleShot, 2000ms, [&]() {
             counter.fetch_add(1);
         });
-        auto timer2 = timerWheel.AddTimer(50ms, [&]() {
+        auto timer2 = timerWheel.AddTimer(WTimerType::SingleShot, 50ms, [&]() {
             counter.fetch_add(1);
         });
 
