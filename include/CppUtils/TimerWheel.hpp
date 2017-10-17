@@ -56,7 +56,7 @@ namespace mn {
             }
 
             /// \note       Thread-safe and re-entrant.
-            void AddTimer(std::chrono::milliseconds duration, std::function<void()> onExpiry) {
+            std::shared_ptr<WTimer> AddTimer(std::chrono::milliseconds duration, std::function<void()> onExpiry) {
                 auto heapTimer = std::make_shared<WTimer>();
                 heapTimer->duration_ = duration;
                 heapTimer->startTime_ = std::chrono::high_resolution_clock::now();
@@ -66,6 +66,8 @@ namespace mn {
                 timerWheelCmd.name_ = "ADD_TIMER";
                 timerWheelCmd.data_ = heapTimer;
                 threadSafeQueue_.Push(timerWheelCmd);
+
+                return heapTimer;
             }
 
 
@@ -146,9 +148,13 @@ namespace mn {
             }
 
             bool CheckTimers(std::chrono::milliseconds& nextExpiry) {
+                std::cout << "Checking timers..." << std::endl;
 
                 // Timers are sorted by expiry time (earliest expiry time is first)
+                int count = 0;
                 for(auto it = timers_.begin(); it != timers_.end();) {
+                    std::cout << "Checking timer " << (*it).get() << "at position " << count << std::endl;
+                    count++;
 
                     auto timer = *it;
                     std::chrono::milliseconds remainingTime = std::chrono::duration_cast<std::chrono::milliseconds>(currTime_ - timer->startTime_);

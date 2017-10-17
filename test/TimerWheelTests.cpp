@@ -32,10 +32,7 @@ namespace {
         virtual ~TimerWheelTests() {}
     };
 
-
-
-    TEST_F(TimerWheelTests, BasicTimerTimeout) {
-
+    TEST_F(TimerWheelTests, SingleTimer) {
         TimerWheel timerWheel;
 
         std::atomic<bool> timerExpiryCalled(false);
@@ -46,6 +43,63 @@ namespace {
         std::this_thread::sleep_for(1000ms);
 
         EXPECT_TRUE(timerExpiryCalled.load());
+    }
+
+    TEST_F(TimerWheelTests, TwoTimers) {
+        TimerWheel timerWheel;
+
+        std::atomic<int> counter(0);
+
+        timerWheel.AddTimer(100ms, [&]() {
+            counter.fetch_add(1);
+        });
+        timerWheel.AddTimer(500ms, [&]() {
+            counter.fetch_add(1);
+        });
+
+        std::this_thread::sleep_for(1000ms);
+        EXPECT_EQ(2, counter.load());
+    }
+
+    TEST_F(TimerWheelTests, ThreeTimers) {
+        TimerWheel timerWheel;
+
+        std::atomic<int> counter(0);
+
+        timerWheel.AddTimer(100ms, [&]() {
+            counter.fetch_add(1);
+        });
+        timerWheel.AddTimer(500ms, [&]() {
+            counter.fetch_add(1);
+        });
+        timerWheel.AddTimer(50ms, [&]() {
+            counter.fetch_add(1);
+        });
+
+
+        std::this_thread::sleep_for(1000ms);
+        EXPECT_EQ(3, counter.load());
+    }
+
+    TEST_F(TimerWheelTests, TwoExpiredOneStillRunning) {
+        TimerWheel timerWheel;
+
+        std::atomic<int> counter(0);
+
+        auto timer0 = timerWheel.AddTimer(100ms, [&]() {
+            counter.fetch_add(1);
+        });
+        auto timer1 = timerWheel.AddTimer(2000ms, [&]() {
+            counter.fetch_add(1);
+        });
+        auto timer2 = timerWheel.AddTimer(50ms, [&]() {
+            counter.fetch_add(1);
+        });
+
+        std::cout << "timer0 = " << timer0.get() << ", timer1 = " << timer1.get() << ", timer2 = " << timer2.get() << std::endl;
+
+        std::this_thread::sleep_for(1000ms);
+        EXPECT_EQ(2, counter.load());
     }
 
 }  // namespace
