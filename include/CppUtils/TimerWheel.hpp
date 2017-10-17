@@ -56,10 +56,11 @@ namespace mn {
             }
 
             /// \note       Thread-safe and re-entrant.
-            void AddTimer(std::chrono::milliseconds duration) {
+            void AddTimer(std::chrono::milliseconds duration, std::function<void()> onExpiry) {
                 auto heapTimer = std::make_shared<WTimer>();
                 heapTimer->duration_ = duration;
                 heapTimer->startTime_ = std::chrono::high_resolution_clock::now();
+                heapTimer->onExpiry_ = onExpiry;
 
                 TimerWheelCmd timerWheelCmd;
                 timerWheelCmd.name_ = "ADD_TIMER";

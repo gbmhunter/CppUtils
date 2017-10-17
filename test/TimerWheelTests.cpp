@@ -38,7 +38,14 @@ namespace {
 
         TimerWheel timerWheel;
 
-        EXPECT_TRUE(true);
+        std::atomic<bool> timerExpiryCalled(false);
+        timerWheel.AddTimer(500ms, [&]() {
+            timerExpiryCalled.store(true);
+        });
+
+        std::this_thread::sleep_for(1000ms);
+
+        EXPECT_TRUE(timerExpiryCalled.load());
     }
 
 }  // namespace
