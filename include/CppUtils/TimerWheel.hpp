@@ -37,11 +37,6 @@ namespace mn {
         class TimerWheel {
         public:
 
-            struct TimerWheelCmd {
-                std::string name_;
-                std::shared_ptr<void> data_;
-            };
-
             TimerWheel() {
                 thread_ = std::thread(&TimerWheel::Process, this);
             }
@@ -128,11 +123,9 @@ namespace mn {
         private:
 
             void Process() {
-
                 std::cout << "Process called." << std::endl;
                 std::unique_lock<std::mutex> lock(mutex_);
                 std::chrono::milliseconds queueWaitTime;
-                TimerWheelCmd timerWheelCmd;
 
                 while(true) {
 
@@ -161,12 +154,8 @@ namespace mn {
                         });
                         std::cout << "Notify/wakeup received on TimerWheel thread." << std::endl;
                     }
-
-
-
                 }
             }
-
 
 
             bool CheckTimers(std::chrono::milliseconds& nextExpiry) {
