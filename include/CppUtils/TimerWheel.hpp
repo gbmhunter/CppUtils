@@ -19,6 +19,7 @@
 
 // User includes
 #include "ThreadSafeQueue.hpp"
+//#include "Semaphore.hpp"
 
 namespace mn {
     namespace CppUtils {
@@ -48,24 +49,77 @@ namespace mn {
             ~TimerWheel() {
                 if(thread_.joinable()) {
                     std::cout << "Sending EXIT command and joining TimerWheel thread." << std::endl;
-                    TimerWheelCmd cmd;
-                    cmd.name_ = "EXIT";
-                    threadSafeQueue_.Push(cmd);
+
+                    //==============================================//
+                    //============ START OF SYNC BLOCK =============//
+                    //==============================================//
+                    std::unique_lock<std::mutex> lock(mutex_);
+
+                    exit_ = true;
+                    wakeup_ = true;
+                    lock.unlock();
+                    //==============================================//
+                    //============= END OF SYNC BLOCK ==============//
+                    //==============================================//
+
+                    std::cout << "Calling notify_one()..." << std::endl;
+                    cv_.notify_one();
                     thread_.join();
                 }
             }
 
             /// \note       Thread-safe and re-entrant.
             std::shared_ptr<WTimer> AddTimer(std::chrono::milliseconds duration, std::function<void()> onExpiry) {
+                std::cout << std::string() +__PRETTY_FUNCTION__ + " called.\n";
                 auto heapTimer = std::make_shared<WTimer>();
                 heapTimer->duration_ = duration;
                 heapTimer->startTime_ = std::chrono::high_resolution_clock::now();
                 heapTimer->onExpiry_ = onExpiry;
 
-                TimerWheelCmd timerWheelCmd;
-                timerWheelCmd.name_ = "ADD_TIMER";
-                timerWheelCmd.data_ = heapTimer;
-                threadSafeQueue_.Push(timerWheelCmd);
+                auto currTime = std::chrono::system_clock::now();
+                auto timerToInsertRemainingTime = heapTimer->duration_ - std::chrono::duration_cast<std::chrono::milliseconds>(currTime - heapTimer->startTime_);
+
+                //==============================================//
+                //============ START OF SYNC BLOCK =============//
+                //==============================================//
+                std::cout << "Waiting for lock...\n";
+                std::unique_lock<std::mutex> lock(mutex_);
+                std::cout << "Lock acquired.\n";
+
+                // Need to insert the new timer into the deque sorted on remaining time
+                std::cout << "Inserting timer...\n";
+                bool timerInserted = false;
+                for(auto it = timers_.begin(); it != timers_.end(); ++it) {
+
+
+                    auto timer = *it;
+                    std::chrono::milliseconds durationSinceTimerStart = std::chrono::duration_cast<std::chrono::milliseconds>(currTime - timer->startTime_);
+                    auto remainingTime = timer->duration_ - durationSinceTimerStart;
+
+                    if(timerToInsertRemainingTime > remainingTime)
+                        continue;
+                    else {
+                        // Current timer in queue has more remaining time, so insert new timer
+                        // before this one!
+                        timers_.insert(it, heapTimer);
+                        timerInserted = true;
+                        break;
+                    }
+                }
+
+                // If we finish the iterator loop and the timer hasn't already been inserted,
+                // the timer needs to be inserted at the end
+                if(!timerInserted)
+                    timers_.push_back(heapTimer);
+
+                wakeup_ = true;
+                lock.unlock();
+                //==============================================//
+                //============= END OF SYNC BLOCK ==============//
+                //==============================================//
+
+                std::cout << "Calling notify_one()..." << std::endl;
+                cv_.notify_one();
 
                 return heapTimer;
             }
@@ -76,9 +130,9 @@ namespace mn {
             void Process() {
 
                 std::cout << "Process called." << std::endl;
+                std::unique_lock<std::mutex> lock(mutex_);
                 std::chrono::milliseconds queueWaitTime;
                 TimerWheelCmd timerWheelCmd;
-                bool cmdReceived;
 
                 while(true) {
 
@@ -86,69 +140,39 @@ namespace mn {
                     if(exit_)
                         return;
 
+                    wakeup_ = false;
+
+                    CheckTimers(queueWaitTime);
+
                     if(timers_.size() == 0) {
-                        std::cout << "No timers present, waiting for command..." << std::endl;
-                        threadSafeQueue_.Pop(timerWheelCmd);
-                        cmdReceived = true;
+                        std::cout << "No timers present, waiting for notify..." << std::endl;
+                        while(!wakeup_)
+                            cv_.wait(lock);
+                        std::cout << "Notify received on TimerWheel thread." << std::endl;
+
                     } else {
                         // Calculate time to wait based on next timer to expire
-                        if(CheckTimers(queueWaitTime)) {
-                            std::cout << "Timers present, calling TryPop() with queueWaitTime = " << std::to_string(queueWaitTime.count()) << std::endl;
-                            cmdReceived = threadSafeQueue_.TryPop(timerWheelCmd, queueWaitTime);
-                        } else {
-                            // No more timers left, so continue to next iteration of loop, where Pop() will be called.
-                            continue;
-                        }
+                        std::cout << "Timers present, calling wait_for() with queueWaitTime (ms) = " << std::to_string(queueWaitTime.count()) << std::endl;
+//                            cmdReceived = threadSafeQueue_.TryPop(timerWheelCmd, queueWaitTime);
+//                            isNotify = semaphore_.TryWait(queueWaitTime);
+
+                        cv_.wait_for(lock, queueWaitTime, [&]{
+                            return wakeup_;
+                        });
+                        std::cout << "Notify/wakeup received on TimerWheel thread." << std::endl;
                     }
 
-                    currTime_ = std::chrono::high_resolution_clock::now();
 
-                    if(cmdReceived) {
-                        HandleCmd(timerWheelCmd);
-                    }
+
                 }
             }
 
-            void HandleCmd(const TimerWheelCmd& cmd) {
 
-                if(cmd.name_ == "ADD_TIMER") {
-                    auto timerToInsert = std::static_pointer_cast<WTimer>(cmd.data_);
-
-
-                    auto timerToInsertRemainingTime = currTime_ - timerToInsert->startTime_;
-
-
-                    // Need to insert the new timer into the deque sorted on remaining time
-                    for(auto it = timers_.begin(); it != timers_.end(); ++it) {
-
-                        auto timer = *it;
-                        auto remainingTime = currTime_ - timer->startTime_;
-
-                        if(timerToInsertRemainingTime > remainingTime)
-                            continue;
-                        else {
-                            // Current timer in queue has more remaining time, so insert new timer
-                            // before this one!
-                            timers_.insert(it, timerToInsert);
-                            continue;
-                        }
-                    }
-
-                    // If we get here, timer needs to be inserted at the end
-                    timers_.push_back(timerToInsert);
-
-
-                } else if(cmd.name_ == "EXIT") {
-                    std::cout << "Received EXIT command." << std::endl;
-                    exit_ = true;
-                } else {
-                    throw std::runtime_error("TimerWheel received unrecognized command.");
-                }
-
-            }
 
             bool CheckTimers(std::chrono::milliseconds& nextExpiry) {
-                std::cout << "Checking timers..." << std::endl;
+                std::cout << "Checking timers. Num timers = " << timers_.size() << std::endl;
+
+                auto currTime = std::chrono::system_clock::now();
 
                 // Timers are sorted by expiry time (earliest expiry time is first)
                 int count = 0;
@@ -157,14 +181,23 @@ namespace mn {
                     count++;
 
                     auto timer = *it;
-                    std::chrono::milliseconds remainingTime = std::chrono::duration_cast<std::chrono::milliseconds>(currTime_ - timer->startTime_);
+
+                    std::cout << "timer->startTime = " << timer->startTime_.time_since_epoch().count() << std::endl;
+                    std::cout << "currTime = " << currTime.time_since_epoch().count() << std::endl;
+                    std::chrono::milliseconds durationSinceTimerStart = std::chrono::duration_cast<std::chrono::milliseconds>(currTime - timer->startTime_);
+                    std::cout << "durationSinceTimerStart (ms) = " << durationSinceTimerStart.count() << std::endl;
+
+                    auto remainingTime = timer->duration_ - durationSinceTimerStart;
+                    std::cout << "remainingTime (ms) = " << remainingTime.count() << std::endl;
 
                     if(remainingTime.count() <= 0) {
                         // Timer has expired!
+                        std::cout << "Timer has expired." << std::endl;
                         timer->onExpiry_();
                         it = timers_.erase(it);
                         continue;
                     } else {
+                        std::cout << "Timer has NOT expired." << std::endl;
                         // Timer expiry is still in the future. Since the deque is sorted, this
                         // is the earliest expiring timer, so return the remaining time
                         nextExpiry = remainingTime;
@@ -179,11 +212,11 @@ namespace mn {
             }
 
             std::thread thread_;
-            ThreadSafeQueue<TimerWheelCmd> threadSafeQueue_;
-            std::deque<std::shared_ptr<WTimer>> timers_;
+            std::condition_variable cv_;
+            std::mutex mutex_;
+            bool wakeup_;
 
-            /// \brief      This is updated once everytime the command queue is unblocked.
-            std::chrono::high_resolution_clock::time_point currTime_;
+            std::deque<std::shared_ptr<WTimer>> timers_;
 
             bool exit_ = false;
 
