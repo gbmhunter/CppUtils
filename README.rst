@@ -219,13 +219,15 @@ This header file contains a :code:`TimerWheel` class that can be used to easily 
         // "Timer expired!" will be printed after 500ms
     }
 
-Note that the lambda callback provided above is executed in the context of the :code:`TimerWheel` thread. This callback could put messages onto other thread's commands queues, notify a :code:`condition_variable` or lock a :code:`mutex` and perform actions on another thread's data.
+Note that the lambda callback provided above is executed in the context of the :code:`TimerWheel` thread. This callback could put messages onto other thread's commands queues, notify a :code:`std::condition_variable`, or lock a :code:`std::mutex` and perform actions on another thread's data.
 
 :code:`TimerWheel` also supports *repetitive timers*.
 
 **Repetitive Timer Example**
 
-#include "CppUtils/TimerWheel.hpp"
+.. code:: cpp
+
+    #include "CppUtils/TimerWheel.hpp"
 
     using namespace std::literals;
     using namespace mn::CppUtils::TimerWheel;
