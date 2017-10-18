@@ -3,7 +3,7 @@
 /// \author 			Geoffrey Hunter (www.mbedded.ninja) <gbmhunter@gmail.com>
 /// \edited             n/a
 /// \created			2017-10-16
-/// \last-modified		2017-10-16
+/// \last-modified		2017-10-17
 /// \brief 				Contains the TimerWheel class.
 /// \details
 ///		See README.md in root dir for more info.
@@ -18,8 +18,7 @@
 #include <deque>
 
 // User includes
-#include "ThreadSafeQueue.hpp"
-//#include "Semaphore.hpp"
+// nothing
 
 namespace mn {
     namespace CppUtils {
@@ -28,26 +27,26 @@ namespace mn {
             // Forward declarations
             class TimerWheel;
 
-            enum class WTimerType {
+            enum class TimerType {
                 SingleShot,
                 Repeatitive
             };
 
-            enum class WTimerState {
+            enum class TimerState {
                 Running,
                 Expired
             };
 
             /// \brief      Abstract base class that represents a timer.
             /// \details    This is inherited by SingleShotTimer and RepetitiveTimer.
-            class WTimer {
+            class Timer {
             public:
 
                 // Declare the TimerWheel class as a friend. This allows the TimerWheel to access the timer's data
                 // without having to call the public functions, which lock a mutex.
                 friend TimerWheel;
 
-                virtual ~WTimer() {}
+                virtual ~Timer() {}
 
                 const std::chrono::milliseconds& GetDuration() const {
                     return duration_;
@@ -66,7 +65,7 @@ namespace mn {
 
                 /// \throws     std::invalid_argument if duration is negative, OR onExpiry does not have an object to
                 ///             call (i.e. equates to false).
-                WTimer(std::chrono::milliseconds duration, std::function<void()> onExpiry) :
+                Timer(std::chrono::milliseconds duration, std::function<void()> onExpiry) :
                         duration_(duration),
                         onExpiry_(onExpiry) {
                     // Input argument checks
@@ -85,22 +84,22 @@ namespace mn {
 
                 std::chrono::high_resolution_clock::time_point startTime_;
                 std::function<void()> onExpiry_;
-                WTimerState state_;
+                TimerState state_;
             };
 
-            class SingleShotTimer : public WTimer {
+            class SingleShotTimer : public Timer {
             public:
                 SingleShotTimer(std::chrono::milliseconds duration, std::function<void()> onExpiry) :
-                        WTimer(duration, onExpiry) {
+                        Timer(duration, onExpiry) {
 
                 }
             };
 
-            class RepetitiveTimer : public WTimer {
+            class RepetitiveTimer : public Timer {
             public:
 
                 RepetitiveTimer(std::chrono::milliseconds duration, int64_t numRepetitions, std::function<void()> onExpiry) :
-                        WTimer(duration, onExpiry),
+                        Timer(duration, onExpiry),
                         numRepetitions_(numRepetitions) {
                     // nothing
                 }
@@ -147,7 +146,7 @@ namespace mn {
                 /// \returns    A pointer to the newly created timer.
                 /// \note       Thread-safe and re-entrant.
                 void
-                AddTimer(std::shared_ptr<WTimer> timer) {
+                AddTimer(std::shared_ptr<Timer> timer) {
                     std::cout << std::string() + __PRETTY_FUNCTION__ + " called.\n";
 
                     //==============================================//
@@ -205,7 +204,7 @@ namespace mn {
                 }
 
                 /// \warning       Only call while mutex_ is locked.
-                void InsertTimer(const std::shared_ptr<WTimer> &timerToInsert) {
+                void InsertTimer(const std::shared_ptr<Timer> &timerToInsert) {
                     // Need to insert the new timer into the deque sorted on remaining time
                     std::cout << "Inserting timer...\n";
                     bool timerInserted = false;
@@ -299,7 +298,7 @@ namespace mn {
                 std::mutex mutex_;
                 bool wakeup_;
 
-                std::deque<std::shared_ptr<WTimer>> timers_;
+                std::deque<std::shared_ptr<Timer>> timers_;
 
                 bool exit_ = false;
 
