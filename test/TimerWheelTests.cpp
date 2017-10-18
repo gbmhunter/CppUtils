@@ -3,7 +3,7 @@
 /// \author 			Geoffrey Hunter (www.mbedded.ninja) <gbmhunter@gmail.com>
 /// \edited             n/a
 /// \created			2017-10-16
-/// \last-modified		2017-10-16
+/// \last-modified		2017-10-17
 /// \brief 				Contains tests for the TimerWheel class.
 /// \details
 ///		See README.md in root dir for more info.
@@ -18,8 +18,6 @@
 
 // User includes
 #include "CppUtils/TimerWheel.hpp"
-#include "CppUtils/ThreadSafeQueue.hpp"
-
 
 using namespace std::literals;
 using namespace mn::CppUtils::TimerWheel;

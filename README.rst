@@ -192,3 +192,53 @@ A timer which allows you to run code after a timeout occurs (code will be run wi
 
     std::cout << "callbackCalled = " << callbackCalled.load() << std::endl;
     // Prints "true"
+
+TimerWheel.hpp
+==============
+
+This header file contains a :code:`TimerWheel` class that can be used to easily create and manage timers (timeouts) in a multi-threaded environment.
+
+**Single-Shot Timer Example**
+
+.. code:: cpp
+
+    #include "CppUtils/TimerWheel.hpp"
+
+    using namespace std::literals;
+    using namespace mn::CppUtils::TimerWheel;
+
+    int main() {
+        TimerWheel timerWheel;
+
+        timerWheel.AddTimer(std::make_shared<SingleShotTimer>(500ms, [&]() {
+            std::cout << "Timer expired!" << std::endl;
+        }));
+
+        std::this_thread::sleep_for(1000ms);
+
+        // "Timer expired!" will be printed after 500ms
+    }
+
+Note that the lambda callback provided above is executed in the context of the :code:`TimerWheel` thread. This callback could put messages onto other thread's commands queues, notify a :code:`condition_variable` or lock a :code:`mutex` and perform actions on another thread's data.
+
+:code:`TimerWheel` also supports *repetitive timers*.
+
+**Repetitive Timer Example**
+
+#include "CppUtils/TimerWheel.hpp"
+
+    using namespace std::literals;
+    using namespace mn::CppUtils::TimerWheel;
+
+    int main() {
+        TimerWheel timerWheel;
+
+        timerWheel.AddTimer(std::make_shared<RepetitiveTimer>(300ms, 3, [&]() {
+            std::cout << "Repeat" << std::endl;
+        }));
+
+        std::this_thread::sleep_for(1000ms);
+
+        // "Repeat" will be printed every 300ms for a total of three times.
+        // Provide -1 instead of 3 to the timer constructor to make the timer run indefinitely.
+    }

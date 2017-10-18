@@ -27,14 +27,11 @@ namespace mn {
             // Forward declarations
             class TimerWheel;
 
-            enum class TimerType {
-                SingleShot,
-                Repeatitive
-            };
-
             enum class TimerState {
-                Running,
-                Expired
+                Initialized,    // Default state timer is in before it is added to the TimerWheel
+                Running,        // Timer transitions to this state when added to the TimerWheel
+                Finished        // Timer is in this state if it is a single-shot timer and it has timed-out,
+                                // or it is a repetitive timer and it has done the specified number of repeats.
             };
 
             /// \brief      Abstract base class that represents a timer.
