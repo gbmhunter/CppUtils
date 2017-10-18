@@ -35,9 +35,9 @@ namespace {
 
         std::atomic<int> counter(0);
 
-        timerWheel.AddTimer(std::make_shared<SingleShotTimer>(500ms, [&]() {
+        timerWheel.AddSingleShotTimer(500ms, [&]() {
             counter.fetch_add(1);
-        }));
+        });
 
         std::this_thread::sleep_for(1000ms);
 
@@ -49,12 +49,12 @@ namespace {
 
         std::atomic<int> counter(0);
 
-        timerWheel.AddTimer(std::make_shared<SingleShotTimer>(100ms, [&]() {
+        timerWheel.AddSingleShotTimer(100ms, [&]() {
             counter.fetch_add(1);
-        }));
-        timerWheel.AddTimer(std::make_shared<SingleShotTimer>(500ms, [&]() {
+        });
+        timerWheel.AddSingleShotTimer(500ms, [&]() {
             counter.fetch_add(1);
-        }));
+        });
 
         std::this_thread::sleep_for(1000ms);
         EXPECT_EQ(2, counter.load());
@@ -65,15 +65,15 @@ namespace {
 
         std::atomic<int> counter(0);
 
-        timerWheel.AddTimer(std::make_shared<SingleShotTimer>(100ms, [&]() {
+        timerWheel.AddSingleShotTimer(100ms, [&]() {
             counter.fetch_add(1);
-        }));
-        timerWheel.AddTimer(std::make_shared<SingleShotTimer>(500ms, [&]() {
+        });
+        timerWheel.AddSingleShotTimer(500ms, [&]() {
             counter.fetch_add(1);
-        }));
-        timerWheel.AddTimer(std::make_shared<SingleShotTimer>(50ms, [&]() {
+        });
+        timerWheel.AddSingleShotTimer(50ms, [&]() {
             counter.fetch_add(1);
-        }));
+        });
 
         std::this_thread::sleep_for(1000ms);
         EXPECT_EQ(3, counter.load());
@@ -84,15 +84,15 @@ namespace {
 
         std::atomic<int> counter(0);
 
-        timerWheel.AddTimer(std::make_shared<SingleShotTimer>(100ms, [&]() {
+        timerWheel.AddSingleShotTimer(100ms, [&]() {
             counter.fetch_add(1);
-        }));
-        timerWheel.AddTimer(std::make_shared<SingleShotTimer>(2000ms, [&]() {
+        });
+        timerWheel.AddSingleShotTimer(2000ms, [&]() {
             counter.fetch_add(1);
-        }));
-        timerWheel.AddTimer(std::make_shared<SingleShotTimer>(50ms, [&]() {
+        });
+        timerWheel.AddSingleShotTimer(50ms, [&]() {
             counter.fetch_add(1);
-        }));
+        });
 
         std::this_thread::sleep_for(1000ms);
         EXPECT_EQ(2, counter.load());
@@ -103,9 +103,9 @@ namespace {
 
         std::atomic<int> counter(0);
 
-        timerWheel.AddTimer(std::make_shared<RepetitiveTimer>(300ms, 3, [&]() {
+        timerWheel.AddRepetitiveTimer(300ms, 3, [&]() {
             counter.fetch_add(1);
-        }));
+        });
 
         std::this_thread::sleep_for(1000ms);
 
@@ -117,9 +117,9 @@ namespace {
 
         std::atomic<int> counter(0);
 
-        timerWheel.AddTimer(std::make_shared<RepetitiveTimer>(100ms, -1, [&]() {
+        timerWheel.AddRepetitiveTimer(100ms, -1, [&]() {
             counter.fetch_add(1);
-        }));
+        });
 
         std::this_thread::sleep_for(1050ms);
 
@@ -131,13 +131,13 @@ namespace {
 
         std::atomic<int> counter(0);
 
-        timerWheel.AddTimer(std::make_shared<RepetitiveTimer>(300ms, 3, [&]() {
+        timerWheel.AddRepetitiveTimer(300ms, 3, [&]() {
             counter.fetch_add(1);
-        }));
+        });
 
-        timerWheel.AddTimer(std::make_shared<RepetitiveTimer>(400ms, 2, [&]() {
+        timerWheel.AddRepetitiveTimer(400ms, 2, [&]() {
             counter.fetch_add(1);
-        }));
+        });
 
         std::this_thread::sleep_for(1000ms);
 
@@ -148,7 +148,7 @@ namespace {
         TimerWheel timerWheel;
 
         // Provide a negative duration
-        EXPECT_THROW(timerWheel.AddTimer(std::make_shared<RepetitiveTimer>(-100ms, 3, [&]() {})),
+        EXPECT_THROW(timerWheel.AddRepetitiveTimer(-100ms, 3, [&]() {}),
                      std::invalid_argument);
     }
 
@@ -156,8 +156,78 @@ namespace {
         TimerWheel timerWheel;
 
         // Provide a std::function with no callable object
-        EXPECT_THROW(timerWheel.AddTimer(std::make_shared<RepetitiveTimer>(-100ms, 3, std::function<void()>())),
+        EXPECT_THROW(timerWheel.AddRepetitiveTimer(-100ms, 3, std::function<void()>()),
                      std::invalid_argument);
+    }
+
+    TEST_F(TimerWheelTests, RemoveTimer) {
+        TimerWheel timerWheel;
+
+        std::atomic<int> counter(0);
+
+        auto timerId = timerWheel.AddSingleShotTimer(500ms, [&]() {
+            counter.fetch_add(1);
+        });
+
+        EXPECT_TRUE(timerWheel.RemoveTimer(timerId));
+
+        std::this_thread::sleep_for(1000ms);
+
+        EXPECT_EQ(0, counter.load());
+    }
+
+    TEST_F(TimerWheelTests, RemoveOneTimerLeaveAnother) {
+        TimerWheel timerWheel;
+
+        std::atomic<int> counter(0);
+
+        auto timerId1 = timerWheel.AddSingleShotTimer(100ms, [&]() {
+            counter.fetch_add(1);
+        });
+
+        timerWheel.AddSingleShotTimer(100ms, [&]() {
+            counter.fetch_add(1);
+        });
+
+        EXPECT_TRUE(timerWheel.RemoveTimer(timerId1));
+
+        std::this_thread::sleep_for(200ms);
+
+        EXPECT_EQ(1, counter.load());
+    }
+
+    TEST_F(TimerWheelTests, TryRemoveAfterExpiry) {
+        TimerWheel timerWheel;
+
+        std::atomic<int> counter(0);
+
+        auto timerId = timerWheel.AddSingleShotTimer(50ms, [&]() {
+            counter.fetch_add(1);
+        });
+
+        std::this_thread::sleep_for(100ms);
+
+        EXPECT_FALSE(timerWheel.RemoveTimer(timerId));
+
+        EXPECT_EQ(1, counter.load());
+    }
+
+    TEST_F(TimerWheelTests, TryRemoveBogusTimer) {
+        TimerWheel timerWheel;
+
+        std::atomic<int> counter(0);
+
+        timerWheel.AddSingleShotTimer(50ms, [&]() {
+            counter.fetch_add(1);
+        });
+
+        // Since the timer ID is the same as the pointer to the timer, we can safely
+        // assume an ID of 0 is never possible
+        EXPECT_FALSE(timerWheel.RemoveTimer(0));
+
+        std::this_thread::sleep_for(100ms);
+
+        EXPECT_EQ(1, counter.load());
     }
 
 }  // namespace
