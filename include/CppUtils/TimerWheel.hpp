@@ -25,6 +25,9 @@ namespace mn {
     namespace CppUtils {
         namespace TimerWheel {
 
+            // Forward declarations
+            class TimerWheel;
+
             enum class WTimerType {
                 SingleShot,
                 Repeatitive
@@ -35,21 +38,49 @@ namespace mn {
                 Expired
             };
 
+            /// \brief      Abstract base class that represents a timer.
+            /// \details    This is inherited by SingleShotTimer and RepetitiveTimer.
             class WTimer {
             public:
 
-                WTimer(std::chrono::milliseconds duration, std::function<void()> onExpiry) {
-                    duration_ = duration;
-                    onExpiry_ = onExpiry;
-                }
+                // Declare the TimerWheel class as a friend. This allows the TimerWheel to access the timer's data
+                // without having to call the public functions, which lock a mutex.
+                friend TimerWheel;
 
                 virtual ~WTimer() {}
+
+                const std::chrono::milliseconds& GetDuration() const {
+                    return duration_;
+                }
+
+                const std::chrono::high_resolution_clock::time_point& GetStartTime() {
+                    return startTime_;
+                }
+
 
                 void SetStartTime(std::chrono::high_resolution_clock::time_point startTime) {
                     startTime_ = startTime;
                 }
 
-//                WTimerType type_;
+            protected:
+
+                /// \throws     std::invalid_argument if duration is negative, OR onExpiry does not have an object to
+                ///             call (i.e. equates to false).
+                WTimer(std::chrono::milliseconds duration, std::function<void()> onExpiry) :
+                        duration_(duration),
+                        onExpiry_(onExpiry) {
+                    // Input argument checks
+                    if(duration_.count() < 0)
+                        throw std::invalid_argument(std::string() + "The value of duration \"" +
+                                                    std::to_string(duration_.count()) + "ms\" provided to "
+                                                    + __PRETTY_FUNCTION__ + " was negative.");
+
+                    if(!onExpiry_)
+                        throw std::invalid_argument(std::string() + "onExpiry provided to " + __PRETTY_FUNCTION__ +
+                                                            " does not have a valid object to call.");
+
+                }
+
                 std::chrono::milliseconds duration_;
 
                 std::chrono::high_resolution_clock::time_point startTime_;
@@ -108,32 +139,6 @@ namespace mn {
                         cv_.notify_one();
                         thread_.join();
                     }
-                }
-
-                /// \brief      Use to add a new timer to the timer wheel.
-                /// \returns    A pointer to the newly created timer.
-                /// \note       Thread-safe and re-entrant.
-                std::shared_ptr<WTimer>
-                AddSingleShotTimer(std::chrono::milliseconds duration, std::function<void()> onExpiry) {
-                    std::cout << std::string() + __PRETTY_FUNCTION__ + " called.\n";
-                    auto newTimer = std::make_shared<WTimer>(duration, onExpiry);
-//                    newTimer->type_ = WTimerType::SingleShot;
-//                    newTimer->startTime_ = std::chrono::high_resolution_clock::now();
-
-                    //==============================================//
-                    //============ START OF SYNC BLOCK =============//
-                    //==============================================//
-                    std::unique_lock<std::mutex> lock(mutex_);
-                    InsertTimer(newTimer);
-                    wakeup_ = true;
-                    lock.unlock();
-                    //==============================================//
-                    //============= END OF SYNC BLOCK ==============//
-                    //==============================================//
-
-                    cv_.notify_one();
-
-                    return newTimer;
                 }
 
                 /// \brief      Use to add a new timer to the timer wheel.

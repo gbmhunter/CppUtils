@@ -100,7 +100,7 @@ namespace {
         EXPECT_EQ(2, counter.load());
     }
 
-    TEST_F(TimerWheelTests, RepetitiveTimer) {
+    TEST_F(TimerWheelTests, ThreeRepeatsTimer) {
         TimerWheel timerWheel;
 
         std::atomic<int> counter(0);
@@ -112,6 +112,54 @@ namespace {
         std::this_thread::sleep_for(1000ms);
 
         EXPECT_EQ(3, counter.load());
+    }
+
+    TEST_F(TimerWheelTests, InfiniteRepeatsTimer) {
+        TimerWheel timerWheel;
+
+        std::atomic<int> counter(0);
+
+        timerWheel.AddTimer(std::make_shared<RepetitiveTimer>(100ms, -1, [&]() {
+            counter.fetch_add(1);
+        }));
+
+        std::this_thread::sleep_for(1050ms);
+
+        EXPECT_EQ(10, counter.load());
+    }
+
+    TEST_F(TimerWheelTests, TwoRepetitiveTimers) {
+        TimerWheel timerWheel;
+
+        std::atomic<int> counter(0);
+
+        timerWheel.AddTimer(std::make_shared<RepetitiveTimer>(300ms, 3, [&]() {
+            counter.fetch_add(1);
+        }));
+
+        timerWheel.AddTimer(std::make_shared<RepetitiveTimer>(400ms, 2, [&]() {
+            counter.fetch_add(1);
+        }));
+
+        std::this_thread::sleep_for(1000ms);
+
+        EXPECT_EQ(5, counter.load());
+    }
+
+    TEST_F(TimerWheelTests, DurationExceptionTest) {
+        TimerWheel timerWheel;
+
+        // Provide a negative duration
+        EXPECT_THROW(timerWheel.AddTimer(std::make_shared<RepetitiveTimer>(-100ms, 3, [&]() {})),
+                     std::invalid_argument);
+    }
+
+    TEST_F(TimerWheelTests, FalseOnExpiryExceptionTest) {
+        TimerWheel timerWheel;
+
+        // Provide a std::function with no callable object
+        EXPECT_THROW(timerWheel.AddTimer(std::make_shared<RepetitiveTimer>(-100ms, 3, std::function<void()>())),
+                     std::invalid_argument);
     }
 
 }  // namespace
