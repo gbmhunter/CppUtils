@@ -210,9 +210,9 @@ This header file contains a :code:`TimerWheel` class that can be used to easily 
     int main() {
         TimerWheel timerWheel;
 
-        timerWheel.AddTimer(std::make_shared<SingleShotTimer>(500ms, [&]() {
+        timerWheel.AddSingleShotTimer(500ms, [&]() {
             std::cout << "Timer expired!" << std::endl;
-        }));
+        });
 
         std::this_thread::sleep_for(1000ms);
 
@@ -235,9 +235,9 @@ Note that the lambda callback provided above is executed in the context of the :
     int main() {
         TimerWheel timerWheel;
 
-        timerWheel.AddTimer(std::make_shared<RepetitiveTimer>(300ms, 3, [&]() {
+        timerWheel.AddRepetitiveTimer(300ms, 3, [&]() {
             std::cout << "Repeat" << std::endl;
-        }));
+        });
 
         std::this_thread::sleep_for(1000ms);
 

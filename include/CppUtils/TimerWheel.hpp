@@ -3,7 +3,7 @@
 /// \author 			Geoffrey Hunter (www.mbedded.ninja) <gbmhunter@gmail.com>
 /// \edited             n/a
 /// \created			2017-10-16
-/// \last-modified		2017-10-17
+/// \last-modified		2017-10-18
 /// \brief 				Contains the TimerWheel class.
 /// \details
 ///		See README.md in root dir for more info.
@@ -13,6 +13,7 @@
 
 // System includes
 #include <chrono>
+#include <cstdint>
 #include <mutex>
 #include <condition_variable>
 #include <deque>
@@ -137,6 +138,62 @@ namespace mn {
                     }
                 }
 
+                /// \brief      Call to add a new single-shot timer to the timer wheel.
+                /// \returns    A unique timer ID for the newly created timer.
+                /// \note       Thread-safe and re-entrant.
+                uintptr_t AddSingleShotTimer(std::chrono::milliseconds duration, std::function<void()> onExpiry) {
+                    auto singleShotTimer = std::make_shared<SingleShotTimer>(duration, onExpiry);
+                    AddTimer(singleShotTimer);
+                    return reinterpret_cast<uintptr_t>(singleShotTimer.get());
+                }
+
+                /// \brief      Call to add a new repetitive timer to the timer wheel.
+                /// \returns    A unique timer ID for the newly created timer.
+                /// \note       Thread-safe and re-entrant.
+                uintptr_t AddRepetitiveTimer(std::chrono::milliseconds duration, int64_t numRepetitions, std::function<void()> onExpiry) {
+                    auto repetitiveTimer = std::make_shared<RepetitiveTimer>(duration, numRepetitions, onExpiry);
+                    AddTimer(repetitiveTimer);
+                    return reinterpret_cast<uintptr_t>(repetitiveTimer.get());
+                }
+
+                /// \brief      Call to remove a timer from the timer wheel.
+                /// \returns    True is timer was found (and removed), otherwise false.
+                bool RemoveTimer(uintptr_t timerId) {
+
+                    auto timerPtr = reinterpret_cast<Timer*>(timerId);
+
+                    //==============================================//
+                    //============ START OF SYNC BLOCK =============//
+                    //==============================================//
+                    std::unique_lock<std::mutex> lock(mutex_);
+
+                    bool removedTimer = false;
+                    for(auto it = timers_.begin(); it != timers_.end(); ) {
+                        auto timer = *it;
+                        if(timer.get() == timerPtr) {
+                            // Found timer!
+                            it = timers_.erase(it);
+                            removedTimer = true;
+                        } else
+                            it++;
+                    }
+
+                    if(removedTimer)
+                        wakeup_ = true;
+                    lock.unlock();
+                    //==============================================//
+                    //============= END OF SYNC BLOCK ==============//
+                    //==============================================//
+
+                    if(removedTimer)
+                        cv_.notify_one();
+
+                    return removedTimer;
+                }
+
+
+            private:
+
                 /// \brief      Use to add a new timer to the timer wheel.
                 /// \param[in]  numRepetitions   The number of repetitions this timer should execute. Set to -1 if you want
                 ///                 the timer to repeat indefinitely.
@@ -159,9 +216,6 @@ namespace mn {
 
                     cv_.notify_one();
                 }
-
-
-            private:
 
                 /// \brief      Function for the timer wheel thread.
                 void Process() {
