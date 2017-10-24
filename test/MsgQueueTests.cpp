@@ -40,18 +40,18 @@ namespace {
 
         ~Thread1() {
             if(thread_.joinable()) {
-                queue_.Push(Msg("EXIT"));
+                queue_.Push(TxMsg("EXIT"));
                 thread_.join();
             }
         }
 
         void SetData(std::string data) {
             auto dataOnHeap = std::make_shared<std::string>(data);
-            queue_.Push(Msg("SET_DATA", dataOnHeap));
+            queue_.Push(TxMsg("SET_DATA", dataOnHeap));
         }
 
         std::string GetData() {
-            Msg msg("GET_DATA");
+            TxMsg msg("GET_DATA");
             auto future = msg.GetFuture();
             queue_.Push(msg);
             future.wait();
@@ -63,7 +63,7 @@ namespace {
 
         void Process() {
 
-            Msg msg;
+            RxMsg msg;
 
             // This loop can be broken by sending the "EXIT" msg!
             while(true) {
