@@ -23,41 +23,54 @@ namespace mn {
 
             using VData = std::shared_ptr<void>;
 
+            enum class ReturnType {
+                NO_RETURN_DATA,
+                RETURN_DATA
+            };
+
             class TxMsg {
             public:
 
-                enum class ReturnType {
-                    NO_RETURN_DATA,
-                    RETURN_DATA
-                };
+                friend class RxMsg;
 
-                TxMsg(std::string id) {
+                TxMsg(std::string id, ReturnType returnType = ReturnType::NO_RETURN_DATA) {
                     id_ = id;
+                    returnType_ = returnType;
+
+                    if(returnType == ReturnType::RETURN_DATA) {
+                        promise_ = std::make_shared<std::promise<VData>>();
+                        future_ = std::make_shared<std::future<VData>>(promise_->get_future());
+                    }
+
                 }
 
                 template<typename T>
-                TxMsg(std::string id, T data) {
+                TxMsg(std::string id, T data, ReturnType returnType = ReturnType::NO_RETURN_DATA) {
                     id_ = id;
                     data_ = std::static_pointer_cast<void>(data);
                 }
 
-                auto GetFuture() {
-                    if (!promise_)
-                        promise_ = std::make_shared<std::promise<VData>>();
-                    return promise_->get_future();
+
+                VData WaitForData() {
+                    if(returnType_ != ReturnType::RETURN_DATA)
+                        throw std::runtime_error(std::string() + __PRETTY_FUNCTION__ + " called but returnType not set to RETURN_DATA.");
+
+                    future_->wait();
+                    return future_->get();
                 }
 
-                void WaitForData() {
-
-                }
+            protected:
 
                 std::string id_;
                 VData data_;
                 std::shared_ptr<std::promise<VData>> promise_;
+                std::shared_ptr<std::future<VData>> future_;
+                ReturnType returnType_;
             };
 
             class RxMsg {
             public:
+
                 RxMsg() {
 
                 }
@@ -70,8 +83,8 @@ namespace mn {
                 }
 
                 void ReturnData(VData data) {
-                    if (!promise_)
-                        throw std::runtime_error("ReturnData called but no promise exists.");
+                    if(returnType_ != ReturnType::RETURN_DATA)
+                        throw std::runtime_error(std::string() + __PRETTY_FUNCTION__ + " called but returnType_ != RETURN_DATA.");
 
                     promise_->set_value(data);
                 }
@@ -80,13 +93,19 @@ namespace mn {
                     id_ = rhs.id_;
                     data_ = rhs.data_;
                     promise_ = rhs.promise_;
+                    returnType_ = rhs.returnType_;
                     return *this;
                 }
 
+                std::string GetId() {
+                    return id_;
+                }
 
+            protected:
                 std::string id_;
                 VData data_;
                 std::shared_ptr<std::promise<VData>> promise_;
+                ReturnType returnType_;
             };
 
             /// \brief       A thread-safe queue designed for inter-thread communication.
@@ -96,30 +115,11 @@ namespace mn {
                 /// \brief      Adds something to the back of the thread-safe queue.
                 /// \details    This may be called from multiple threads at the "same time". Method
                 ///             will block until item can be placed onto queue.
-                void Push(const TxMsg &item) {
+                void Push(const TxMsg& item) {
                     std::unique_lock<std::mutex> uniqueLock(mutex_);
-                    queue_.push(item);
+                    queue_.push(std::move(item));
                     uniqueLock.unlock();
                     conditionVariable_.notify_one();
-                }
-
-                /// \brief      Adds something to the back of the thread-safe queue.
-                /// \details    This may be called from multiple threads at the "same time". Method
-                ///             will block until item can be placed onto queue.
-                VData PushWait(TxMsg &item) {
-                    std::unique_lock<std::mutex> uniqueLock(mutex_);
-
-
-                    auto future = item.GetFuture();
-
-                    // Push item onto queue
-                    queue_.push(item);
-
-                    uniqueLock.unlock();
-                    conditionVariable_.notify_one();
-
-                    future.wait();
-                    return future.get();
                 }
 
                 /// \brief      Waits indefinitely until an item is available on the queue. Removes one item.
@@ -135,10 +135,10 @@ namespace mn {
                     });
 
                     // If we get here, there is an item on the queue for us, and the lock has been taken out
-                    auto txMsg = queue_.front();
+                    auto txMsg = std::move(queue_.front());
 
                     // Copy (convert) TX msg to RX msg
-                    item = txMsg;
+                    item = std::move(txMsg);
                     queue_.pop();
 
                     // Mutex will automatically be unlocked here
@@ -149,7 +149,7 @@ namespace mn {
                 /// \details    This may be called from multiple threads at the "same time". Method
                 ///             will block until the is an item on the queue OR a timeout occurs.
                 /// \returns    Returns true is item received, returns false if a timeout occurred.
-                bool TryPop(TxMsg &item, const std::chrono::milliseconds &timeout) {
+                bool TryPop(RxMsg &item, const std::chrono::milliseconds &timeout) {
 
                     // Lock the mutex
                     std::unique_lock<std::mutex> uniqueLock(mutex_);
@@ -161,7 +161,7 @@ namespace mn {
                     }
 
                     // If we get here, there is an item on the queue for us, and the lock has been taken out
-                    item = queue_.front();
+                    item = std::move(queue_.front());
                     queue_.pop();
 
                     // Mutex will automatically be unlocked here

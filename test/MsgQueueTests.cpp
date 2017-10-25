@@ -51,11 +51,9 @@ namespace {
         }
 
         std::string GetData() {
-            TxMsg msg("GET_DATA");
-            auto future = msg.GetFuture();
+            TxMsg msg("GET_DATA", ReturnType::RETURN_DATA);
             queue_.Push(msg);
-            future.wait();
-            auto retVal = future.get();
+            auto retVal = msg.WaitForData();
             return *std::static_pointer_cast<std::string>(retVal);
         }
 
@@ -72,14 +70,14 @@ namespace {
                 //==============================================//
                 //============= MSG PROCESSING LOOP ============//
                 //==============================================//
-                if(msg.id_ == "SET_DATA") {
+                if(msg.GetId() == "SET_DATA") {
                     auto data = std::static_pointer_cast<std::string>(msg.GetData()); // Cast back to exact data type
                     data_ = *data;
-                } else if(msg.id_ == "GET_DATA") {
+                } else if(msg.GetId() == "GET_DATA") {
                     auto retData = std::make_shared<std::string>(data_);
                     msg.ReturnData(retData);
                     break;
-                } else if(msg.id_ == "EXIT") {
+                } else if(msg.GetId() == "EXIT") {
                     // Break from infinite while loop, which will mean that
                     // this function will return and then thread.join() will
                     // return
