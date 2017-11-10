@@ -96,6 +96,29 @@ Contains a basic event class which you can use to implement an event/listener ba
         event.Fire(); // Prints "TestMethod() called"
     }
 
+Exception.hpp
+=============
+
+Exception.hpp provides functionality to throw an exception which will print the file name and line number that it was thrown on, which can be of great help when debugging!
+
+Once including the header file, you can throw one of these exceptions with the :code:`THROW_EXCEPT()` macro, as shown in the below code:
+
+.. code:: cpp
+
+    #include "CppUtils/Exception.hpp"
+
+    int main() {
+        THROW_EXCEPT("Something bad happened!");
+    }
+
+The above code will print:
+
+.. code:: cpp
+
+    terminate called after throwing an instance of 'Exception'
+      what(): /home/user/main.cpp:4: Something bad happened!
+
+
 HeapTracker.hpp
 ===============
 

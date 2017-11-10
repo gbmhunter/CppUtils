@@ -118,7 +118,7 @@ namespace mn {
                 /// \brief      Stops and joins with the timer wheel thread before destroying.
                 ~TimerWheel() {
                     if (thread_.joinable()) {
-                        std::cout << "Sending EXIT command and joining TimerWheel thread." << std::endl;
+//                        std::cout << "Sending EXIT command and joining TimerWheel thread." << std::endl;
 
                         //==============================================//
                         //============ START OF SYNC BLOCK =============//
@@ -132,7 +132,7 @@ namespace mn {
                         //============= END OF SYNC BLOCK ==============//
                         //==============================================//
 
-                        std::cout << "Calling notify_one()..." << std::endl;
+//                        std::cout << "Calling notify_one()..." << std::endl;
                         cv_.notify_one();
                         thread_.join();
                     }
@@ -201,7 +201,7 @@ namespace mn {
                 /// \note       Thread-safe and re-entrant.
                 void
                 AddTimer(std::shared_ptr<Timer> timer) {
-                    std::cout << std::string() + __PRETTY_FUNCTION__ + " called.\n";
+//                    std::cout << std::string() + __PRETTY_FUNCTION__ + " called.\n";
 
                     //==============================================//
                     //============ START OF SYNC BLOCK =============//
@@ -234,22 +234,22 @@ namespace mn {
                         CheckTimers(queueWaitTime);
 
                         if (timers_.size() == 0) {
-                            std::cout << "No timers present, waiting for notify..." << std::endl;
+//                            std::cout << "No timers present, waiting for notify..." << std::endl;
                             while (!wakeup_)
                                 cv_.wait(lock);
-                            std::cout << "Notify received on TimerWheel thread." << std::endl;
+//                            std::cout << "Notify received on TimerWheel thread." << std::endl;
 
                         } else {
                             // Calculate time to wait based on next timer to expire
-                            std::cout << "Timers present, calling wait_for() with queueWaitTime (ms) = "
-                                      << std::to_string(queueWaitTime.count()) << std::endl;
+//                            std::cout << "Timers present, calling wait_for() with queueWaitTime (ms) = "
+//                                      << std::to_string(queueWaitTime.count()) << std::endl;
 //                            cmdReceived = threadSafeQueue_.TryPop(timerWheelCmd, queueWaitTime);
 //                            isNotify = semaphore_.TryWait(queueWaitTime);
 
                             cv_.wait_for(lock, queueWaitTime, [&] {
                                 return wakeup_;
                             });
-                            std::cout << "Notify/wakeup received on TimerWheel thread." << std::endl;
+//                            std::cout << "Notify/wakeup received on TimerWheel thread." << std::endl;
                         }
                     }
                 }
@@ -257,7 +257,7 @@ namespace mn {
                 /// \warning       Only call while mutex_ is locked.
                 void InsertTimer(const std::shared_ptr<Timer> &timerToInsert) {
                     // Need to insert the new timer into the deque sorted on remaining time
-                    std::cout << "Inserting timer...\n";
+//                    std::cout << "Inserting timer...\n";
                     bool timerInserted = false;
 
                     auto currTime = std::chrono::system_clock::now();
@@ -296,41 +296,41 @@ namespace mn {
                 /// \param[out] nextExpiry  The earliest expiry duration from now for any of the active timers.
                 /// \warning       Only call while mutex_ is locked.
                 void CheckTimers(std::chrono::milliseconds &nextExpiry) {
-                    std::cout << "Checking timers. Num timers = " << timers_.size() << std::endl;
+//                    std::cout << "Checking timers. Num timers = " << timers_.size() << std::endl;
 
                     auto currTime = std::chrono::system_clock::now();
 
                     // Timers are sorted by expiry time (earliest expiry time is first)
                     int count = 0;
                     for (auto it = timers_.begin(); it != timers_.end();) {
-                        std::cout << "Checking timer " << (*it).get() << "at position " << count << std::endl;
+//                        std::cout << "Checking timer " << (*it).get() << "at position " << count << std::endl;
                         count++;
 
                         auto timer = *it;
 
-                        std::cout << "timer->startTime = " << timer->startTime_.time_since_epoch().count() << std::endl;
-                        std::cout << "currTime = " << currTime.time_since_epoch().count() << std::endl;
+//                        std::cout << "timer->startTime = " << timer->startTime_.time_since_epoch().count() << std::endl;
+//                        std::cout << "currTime = " << currTime.time_since_epoch().count() << std::endl;
                         std::chrono::milliseconds durationSinceTimerStart = std::chrono::duration_cast<std::chrono::milliseconds>(
                                 currTime - timer->startTime_);
-                        std::cout << "durationSinceTimerStart (ms) = " << durationSinceTimerStart.count() << std::endl;
+//                        std::cout << "durationSinceTimerStart (ms) = " << durationSinceTimerStart.count() << std::endl;
 
                         auto remainingTime = timer->duration_ - durationSinceTimerStart;
-                        std::cout << "remainingTime (ms) = " << remainingTime.count() << std::endl;
+//                        std::cout << "remainingTime (ms) = " << remainingTime.count() << std::endl;
 
                         if (remainingTime.count() <= 0) {
                             // Timer has expired!
-                            std::cout << "Timer has expired." << std::endl;
+//                            std::cout << "Timer has expired." << std::endl;
                             timer->onExpiry_();
                             it = timers_.erase(it);
 
                             if (auto repetitiveTimer = std::dynamic_pointer_cast<RepetitiveTimer>(timer)) {
-                                std::cout << "Timer is REPEATITIVE, re-adding...\n";
+//                                std::cout << "Timer is REPEATITIVE, re-adding...\n";
                                 InsertTimer(timer);
                             }
 
                             continue;
                         } else {
-                            std::cout << "Timer has NOT expired." << std::endl;
+//                            std::cout << "Timer has NOT expired." << std::endl;
                             // Timer expiry is still in the future. Since the deque is sorted, this
                             // is the earliest expiring timer, so return the remaining time
                             nextExpiry = remainingTime;
