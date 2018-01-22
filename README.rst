@@ -165,6 +165,33 @@ HeapTracker.hpp contains a :code:`HeapTracker` class which can be used keep trac
 - :code:`HeapTracker` is not able to keep track of heap allocations that do not use the standard :code:`new`/:code:`delete`. This includes any use of :code:`malloc()`/:code:`free()` and custom allocators.
 - :code:`HeapTracker` is a thread-safe Singleton. Use :code:`HeapTracker::Instance()` to acquire a reference to the single instance.
 
+Logger.hpp
+==========
+
+A simpler header-only logging class which supports:
+
+- Different logging severities (e.g. DEBUG, WARNING, ERROR)
+- Automatic capture of filename, line number and function name
+- User control of where to direct logging output (does not automatically go to std::cout)
+- ANSI colour support
+
+**Usage:**
+
+.. code:: cpp
+
+    #include "CppUtils/Logger.hpp"
+
+    using namespace mn::CppUtils;
+
+    int main() {
+        Logger logger("ExampleLogger", Logger::Severity::DEBUG, Logger::Color::BLUE, [](Logger::Severity severity, std::string msg){
+            std::cout << msg << std::endl;
+        });
+
+        LOG(logger, "Hello, world!"); // Prints "ExampleLogger (/home/CppUtils/Example.cpp, 10, main()). DEBUG: Hello, world!" in a blue font
+    }
+
+
 StrConv.hpp
 ===========
 

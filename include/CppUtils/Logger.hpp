@@ -3,7 +3,7 @@
 /// \author 			Geoffrey Hunter (www.mbedded.ninja) <gbmhunter@gmail.com>
 /// \edited             n/a
 /// \created			2017-08-15
-/// \last-modified		2017-09-27
+/// \last-modified		2018-01-22
 /// \brief 				Contains Logging macros.
 /// \details
 ///		See README.md in root dir for more info.
@@ -18,14 +18,13 @@
 namespace mn {
     namespace CppUtils {
 
-//#define LOG_INFO(color, fmt, ...) \
-//        do { fprintf(stdout, "%s%s:%d:%s(): " fmt, color,  __FILE__, \
-//                                __LINE__, __func__, ##__VA_ARGS__); \
-//            fprintf(stdout, "\x1b[0m"); \
-//        } while (0)
 
-
-        #define LOG(logger, severity, msg) logger.MacroWillCall(msg, Logger::Severity::severity, __FILE__, __LINE__, __FUNCTION__)
+/// \brief      This is the macro you should use in your code to log things!
+/// \details    This will automatically capture the file name, line number and function name of LOG() by using preprocessor variables.
+/// \param[in]  logger      The name of the logger object you want to use.
+/// \param[in]  severity    The severity of the message.
+/// \param[in]  msg         The message to log.
+#define LOG(logger, severity, msg) logger.MacroWillCall(msg, Logger::Severity::severity, __FILE__, __LINE__, __FUNCTION__)
 
 #define config_TERM_ESCAPE_CODE				"\x1B["
 
@@ -72,7 +71,8 @@ namespace mn {
                 CUSTOM
             };
 
-            Logger(std::string name, Severity logLevel, Color color, std::function<void(std::string)> output) {
+            /// \brief      Constructor.
+            Logger(std::string name, Severity logLevel, Color color, std::function<void(Severity, std::string)> output) {
                 name_ = name;
                 logLevel_ = logLevel;
                 normalColor_ = color;
@@ -82,20 +82,7 @@ namespace mn {
                 errorColor_ = Color::RED;
             }
 
-//            inline void Info(std::string msg, std::string fileName, int lineNum) {
-//                std::string formattedMsg;
-//                formattedMsg += fileName + ", " + std::to_string(lineNum) + ": " + msg;
-//                output_(formattedMsg);
-//            }
-//
-//            void Warning(std::string msg) {
-//
-//            }
-//
-//            void Error(std::string msg) {
-//
-//            }
-
+            /// \brief      This will be called by the LOG() macro defined above.
             inline void MacroWillCall(std::string msg, Severity severity, std::string fileName, int lineNum, std::string functionName) {
 
                 // Compare severities, only continue if message severity is higher or
@@ -123,7 +110,7 @@ namespace mn {
                 formattedMsg += startColorText + name_ +
                         " (" + fileName + ", " + std::to_string(lineNum) + ", " + functionName + "()). " + ToString(severity) + ": " +
                         msg + endColorText;
-                output_(formattedMsg);
+                output_(severity, formattedMsg);
             }
 
             void SetLogLevel(Severity logLevel) {
@@ -138,7 +125,7 @@ namespace mn {
             Logger::Color normalColor_;
             Logger::Color warningColor_;
             Logger::Color errorColor_;
-            std::function<void(std::string)> output_;
+            std::function<void(Severity, std::string)> output_;
 
             static std::string ToString(Severity severity) {
                 switch(severity) {

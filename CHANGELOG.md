@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [v2.0.0] - 2018-01-22
+
+### Added
+- Added 'Severity' variable to 'Logger' output function callback (API change).
+- Added info about the 'Logger' class to the README.
 
 ## [v1.8.1] - 2017-11-27
 
@@ -13,5 +18,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - This CHANGELOG.md file.
 - TravisCI build status image added to README.
 
-[Unreleased]: https://github.com/mbedded-ninja/CppUtils/compare/v1.8.1...HEAD
+[Unreleased]: https://github.com/mbedded-ninja/CppUtils/compare/v2.0.0...HEAD
+[v2.0.0]: https://github.com/mbedded-ninja/CppUtils/compare/v1.8.1...v2.0.0
 [v1.8.1]: https://github.com/mbedded-ninja/CppUtils/compare/v1.8.0...v1.8.1
