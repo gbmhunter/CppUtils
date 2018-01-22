@@ -122,5 +122,23 @@ namespace {
 
         LOG(logger, DEBUG, "Hello, world!");
     }
+
+    TEST_F(LoggerTests, VAArgs) {
+        std::string savedMsg;
+        Logger::Severity savedSeverity;
+        Logger logger("TestLogger", Logger::Severity::DEBUG, Logger::Color::NONE, [&](Logger::Severity severity, std::string msg){
+            savedMsg = msg;
+            savedSeverity = severity;
+        });
+
+        int myNum = 5;
+        LOG(logger, INFO, "My num. = %i", myNum); int lineNum = __LINE__;
+
+        std::string filePath = __FILE__;
+
+        std::cout << "savedMsg = " << savedMsg << std::endl;
+        EXPECT_EQ(std::string() + "TestLogger (" + __FILE__ + ", " + std::to_string(lineNum) + ", TestBody()). INFO: My num. = 5", savedMsg);
+        EXPECT_EQ(Logger::Severity::INFO, savedSeverity);
+    }
    
 }  // namespace
