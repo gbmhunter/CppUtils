@@ -170,6 +170,7 @@ Logger.hpp
 
 A simpler header-only logging class which supports:
 
+- printf() style support (for the easy logging of integers, hex values, e.t.c)
 - Different logging severities (e.g. DEBUG, WARNING, ERROR)
 - Automatic capture of filename, line number and function name
 - User control of where to direct logging output (does not automatically go to std::cout)
@@ -188,7 +189,8 @@ A simpler header-only logging class which supports:
             std::cout << msg << std::endl;
         });
 
-        LOG(logger, "Hello, world!"); // Prints "ExampleLogger (/home/CppUtils/Example.cpp, 10, main()). DEBUG: Hello, world!" in a blue font
+        int myNum = 5;
+        LOG(logger, "My num. = %i", myNum); // Prints "ExampleLogger (/home/CppUtils/Example.cpp, 10, main()). DEBUG: My num. = 5" in a blue font
     }
 
 

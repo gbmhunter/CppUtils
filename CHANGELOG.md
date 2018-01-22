@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [v2.1.0] - 2018-01-22
+
+### Added
+- Added printf() style support to the LOG() macro.
+
 ## [v2.0.0] - 2018-01-22
 
 ### Added
@@ -18,6 +23,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - This CHANGELOG.md file.
 - TravisCI build status image added to README.
 
-[Unreleased]: https://github.com/mbedded-ninja/CppUtils/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/mbedded-ninja/CppUtils/compare/v2.1.0...HEAD
+[v2.1.0]: https://github.com/mbedded-ninja/CppUtils/compare/v2.0.0...v2.1.0
 [v2.0.0]: https://github.com/mbedded-ninja/CppUtils/compare/v1.8.1...v2.0.0
 [v1.8.1]: https://github.com/mbedded-ninja/CppUtils/compare/v1.8.0...v1.8.1

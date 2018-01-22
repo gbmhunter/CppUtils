@@ -14,6 +14,7 @@
 // System includes
 #include <climits>
 #include <functional>
+#include <stdarg.h>
 
 namespace mn {
     namespace CppUtils {
@@ -24,7 +25,7 @@ namespace mn {
 /// \param[in]  logger      The name of the logger object you want to use.
 /// \param[in]  severity    The severity of the message.
 /// \param[in]  msg         The message to log.
-#define LOG(logger, severity, msg) logger.MacroWillCall(msg, Logger::Severity::severity, __FILE__, __LINE__, __FUNCTION__)
+#define LOG(logger, severity, msg, ...) logger.MacroWillCall(msg, Logger::Severity::severity, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 
 #define config_TERM_ESCAPE_CODE				"\x1B["
 
@@ -72,18 +73,26 @@ namespace mn {
             };
 
             /// \brief      Constructor.
-            Logger(std::string name, Severity logLevel, Color color, std::function<void(Severity, std::string)> output) {
+            Logger(std::string name, Severity logLevel, Color color, std::function<void(Severity, std::string)> output, uint32_t printfBufferSize_B = printfBufferSizeDefault_B) {
                 name_ = name;
                 logLevel_ = logLevel;
+                normalColor_ = color;
                 normalColor_ = color;
                 output_ = output;
 
                 warningColor_ = Color::YELLOW;
                 errorColor_ = Color::RED;
+
+                // Create buffer for printf (remember to delete in constructor)
+                printfBuffer =  new char[printfBufferSize_B];
+            }
+
+            ~Logger() {
+                delete[] printfBuffer;
             }
 
             /// \brief      This will be called by the LOG() macro defined above.
-            inline void MacroWillCall(std::string msg, Severity severity, std::string fileName, int lineNum, std::string functionName) {
+            inline void MacroWillCall(std::string msg, Severity severity, std::string fileName, int lineNum, std::string functionName, ...) {
 
                 // Compare severities, only continue if message severity is higher or
                 // equal to current log level
@@ -106,11 +115,18 @@ namespace mn {
                     }
                 }
 
+                va_list args;
+                va_start(args, functionName);
+                vsnprintf(printfBuffer, 100, msg.c_str(), args);
+
+                msg = std::string(printfBuffer);
+
                 std::string formattedMsg;
                 formattedMsg += startColorText + name_ +
                         " (" + fileName + ", " + std::to_string(lineNum) + ", " + functionName + "()). " + ToString(severity) + ": " +
                         msg + endColorText;
                 output_(severity, formattedMsg);
+                va_end (args);
             }
 
             void SetLogLevel(Severity logLevel) {
@@ -126,6 +142,9 @@ namespace mn {
             Logger::Color warningColor_;
             Logger::Color errorColor_;
             std::function<void(Severity, std::string)> output_;
+            
+            char* printfBuffer;
+            static constexpr uint32_t printfBufferSizeDefault_B = 200;
 
             static std::string ToString(Severity severity) {
                 switch(severity) {
