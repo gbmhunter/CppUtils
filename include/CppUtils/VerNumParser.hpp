@@ -39,7 +39,7 @@ namespace mn {
             ///                 version number, moving left to right. e.g. "vA.B.C" would store
             ///                 A as the first integer, B as the second, C as the last.
             /// \throws     VerNumParserEx if provided version number is ill-formed.
-            static std::vector<uint32_t> Parse(const std::string& verNum) {
+            static std::vector<uint32_t> ToInts(const std::string& verNum) {
 
                 std::vector<uint32_t> digits;
                 std::string delimiter(".");
@@ -65,7 +65,7 @@ namespace mn {
 
             private:
 
-                /// brief       Private helper function for #Parse().
+                /// brief       Private helper function for #ToInts().
                 static void ParseDigit(const std::string& digitStr, std::vector<uint32_t>& digits) {
                     std::string::size_type nextChar;
 

@@ -299,3 +299,25 @@ Note that the lambda callback provided above is executed in the context of the :
         // "Repeat" will be printed every 300ms for a total of three times.
         // Provide -1 instead of 3 to the timer constructor to make the timer run indefinitely.
     }
+
+VerNumParser.hpp
+================
+
+This header file provides a class which has utility functions for dealing with string-based version numbers.
+
+.. code:: cpp
+
+    #include "CppUtils/VerNumParser.hpp"
+    
+    using namespace mn::CppUtils;
+
+    int main() {
+        
+        // Converts a version string into the individual integer
+        // digits
+        auto digits = VerNumParser::ToInts("v2.7.4");
+
+        std::cout << digits[0]; // "2"
+        std::cout << digits[1]; // "7"
+        std::cout << digits[2]; // "4"
+    }
