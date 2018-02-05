@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [v3.0.0] - 2018-02-04
+
+### Added
+- Added new 'VerNumParser' class which provides utility functions for dealing with string-based version numbers.
+- Added info and examples of 'VerNumParser' class to README.
+
 ## [v2.1.0] - 2018-01-22
 
 ### Added
