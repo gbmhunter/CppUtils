@@ -6,8 +6,8 @@ CppUtils
 A library with a range of utility classes and methods for jump starting C++ applications.
 -----------------------------------------------------------------------------------------
 
-.. image:: https://travis-ci.org/mbedded-ninja/CppUtils.svg?branch=master
-	:target: https://travis-ci.org/mbedded-ninja/CppUtils
+.. image:: https://travis-ci.org/gbmhunter/CppUtils.svg?branch=master
+	:target: https://travis-ci.org/gbmhunter/CppUtils
 
 Bits.hpp
 ========
