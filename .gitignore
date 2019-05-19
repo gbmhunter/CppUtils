@@ -6,3 +6,6 @@ build/
 
 # High-churn CLion project file
 .idea/workspace.xml
+
+.vscode/c_cpp_properties.json
+.vscode/settings.json
